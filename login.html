@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Company Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <header>
+        <div class="stack" style="justify-content: space-between; align-items: center;">
+          <div>
+            <h1>Welcome Back</h1>
+            <p>Sign in to access your company dashboard and management tools.</p>
+          </div>
+          <span class="badge" title="Firebase Authentication">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+            Secure Login
+          </span>
+        </div>
+      </header>
+      <form id="login-form" novalidate>
+        <div class="field col-12">
+          <label class="label" for="email">Email Address *</label>
+          <input class="input" id="email" name="email" type="email" required placeholder="your@company.com" />
+        </div>
+
+        <div class="field col-12">
+          <label class="label" for="password">Password *</label>
+          <input class="input" id="password" name="password" type="password" required placeholder="Enter your password" minlength="6" />
+          <div class="row" style="justify-content: space-between;">
+            <small class="hint">Minimum 6 characters</small>
+            <a href="#forgot-password" class="link">Forgot password?</a>
+          </div>
+        </div>
+
+        <div class="row col-12" style="justify-content: space-between; align-items:center;">
+          <label class="row" style="gap:12px; cursor: pointer;">
+            <input type="checkbox" id="remember" />
+            <span class="hint">Remember me</span>
+          </label>
+          <div class="row hint" title="Authentication status">
+            <span class="hint" id="authStatus">Not authenticated</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <a href="register.html" class="btn btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M13.5 12H3"/>
+            </svg>
+            Create Account
+          </a>
+          <button class="btn btn-primary" id="loginBtn" type="submit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+              <path d="M21 12c0 2.2-1.2 4.9-2.5 6.5-.8.9-2.4 1.5-3.5 1.5-1.5 0-3-1-4-2-1.5-1.5-2-3-2-4 0-1 .5-2.5 1.5-3.5 1-1 2-1.5 3-1.5.5 0 1 0 1.5.5.5.5.5 1 .5 1.5 0 1.5-1 3-3 3-1 0-1-.5-1-1 0-.5.5-1 1-1 .5 0 1 0 1 1 0 .5 0 1-1 1 0 0-1-1-1-2 0-1.5 1-3 3-3 1.5 0 3 1 3 3z"/>
+              <path d="M20 12c0 1.2-.5 2.7-1 3.7-.5 1-1.5 2.3-2.5 2.3-.5 0-1.5-.5-2-1-.5-.5-1-1-1-2 0-1 .5-2 1-2.5.5-.5 1-.5 1.5-.5.5 0 1 0 1.5.5.5.5.5 1 .5 1.5 0 1-1 2-2 2-.5 0-1-.5-1-1 0-.5.5-1 1-1 .5 0 1 0 1 1 0 .5 0 1-1 1 0 0-1-1-1-1.5 0-1 1-2 2-2 1 0 2 1 2 2z"/>
+            </svg>
+            Sign In
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="footer-note hint">
+      <strong>🔐 Security Note:</strong> This login system uses Firebase Authentication with secure practices. Ensure you've enabled Email/Password authentication in your Firebase Console.
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Firebase SDK (modular v10) -->
+  
+  <script type="module">
+  import { Auth, AuthUI } from './auth.js';
+
+  const form = document.getElementById('login-form');
+  const loginBtn = document.getElementById('loginBtn');
+
+  // Add auth state listener to handle redirects
+  Auth.addAuthStateListener((user) => {
+    if (user) {
+      // User is logged in, redirect to dashboard
+      window.location.href = 'dashboard.html';
+    }
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
+    // Set button to loading state
+    AuthUI.setButtonLoading(loginBtn, true);
+    
+    // Get form values
+    const email = form.email.value.trim();
+    const password = form.password.value;
+    const rememberMe = form.remember.checked;
+    
+    // Login user
+    const result = await Auth.login(email, password, rememberMe);
+    
+    // Handle result
+    AuthUI.handleAuthResult(result);
+    
+    // Reset button state
+    AuthUI.setButtonLoading(loginBtn, false);
+  });
+
+  // Forgot password functionality
+  document.querySelector('a[href="#forgot-password"]').addEventListener('click', async (e) => {
+    e.preventDefault();
+    
+    const email = prompt("Please enter your email address:");
+    if (email) {
+      const result = await Auth.sendPasswordReset(email);
+      AuthUI.handleAuthResult(result);
+    }
+  });
+</script>
+ </body>
+</html>
